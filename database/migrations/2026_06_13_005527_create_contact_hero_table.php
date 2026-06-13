@@ -1,0 +1,25 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('contact_hero', function (Blueprint $table) {
+            $table->id();
+            $table->string('title')->default('— GET IN TOUCH');
+            $table->string('subtitle')->default('Contact Us');
+            $table->string('destination')->default('Home/Contact');
+            $table->string('background_image')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('contact_hero');
+    }
+};
