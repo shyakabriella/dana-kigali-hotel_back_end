@@ -208,65 +208,71 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/dana/about/section-three/{id}/timeline/{index}', [AboutSectionThreeController::class, 'deleteTimelineItem']);
     //About page section four CRUD
     Route::post('/dana/about/section-four', [AboutSectionFourController::class, 'store']);
-Route::put('/dana/about/section-four/{id}', [AboutSectionFourController::class, 'update']);
-Route::delete('/dana/about/section-four/{id}', [AboutSectionFourController::class, 'destroy']);
-Route::post('/dana/about/section-four/upload-member-image', [AboutSectionFourController::class, 'uploadMemberImage']);
-Route::delete('/dana/about/section-four/{id}/member/{index}/image', [AboutSectionFourController::class, 'deleteMemberImage']);
-//About page section five CRUD
-Route::post('/dana/about/section-five', [AboutSectionFiveController::class, 'store']);
-Route::put('/dana/about/section-five/{id}', [AboutSectionFiveController::class, 'update']);
-Route::delete('/dana/about/section-five/{id}', [AboutSectionFiveController::class, 'destroy']);
-Route::post('/dana/about/section-five/upload-image', [AboutSectionFiveController::class, 'uploadImage']);
-Route::delete('/dana/about/section-five/{id}/image', [AboutSectionFiveController::class, 'deleteImage']);
-//Rooms page hero section CRUD
-Route::post('/dana/rooms/hero', [RoomsHeroController::class, 'store']);
-Route::put('/dana/rooms/hero/{id}', [RoomsHeroController::class, 'update']);
-Route::delete('/dana/rooms/hero/{id}', [RoomsHeroController::class, 'destroy']);
+    Route::put('/dana/about/section-four/{id}', [AboutSectionFourController::class, 'update']);
+    Route::delete('/dana/about/section-four/{id}', [AboutSectionFourController::class, 'destroy']);
+    Route::post('/dana/about/section-four/upload-member-image', [AboutSectionFourController::class, 'uploadMemberImage']);
+    Route::delete('/dana/about/section-four/{id}/member/{index}/image', [AboutSectionFourController::class, 'deleteMemberImage']);
+    //About page section five CRUD
+    Route::post('/dana/about/section-five', [AboutSectionFiveController::class, 'store']);
+    Route::put('/dana/about/section-five/{id}', [AboutSectionFiveController::class, 'update']);
+    Route::delete('/dana/about/section-five/{id}', [AboutSectionFiveController::class, 'destroy']);
+    Route::post('/dana/about/section-five/upload-image', [AboutSectionFiveController::class, 'uploadImage']);
+    Route::delete('/dana/about/section-five/{id}/image', [AboutSectionFiveController::class, 'deleteImage']);
+    
+    //Rooms page hero section CRUD
+    Route::post('/dana/rooms/hero', [RoomsHeroController::class, 'store']);
+    Route::put('/dana/rooms/hero/{id}', [RoomsHeroController::class, 'update']);
+    Route::delete('/dana/rooms/hero/{id}', [RoomsHeroController::class, 'destroy']);
 
-//Rooms page section one CRUD
-Route::post('/dana/rooms/section-one', [RoomsSectionOneController::class, 'store']);
-Route::put('/dana/rooms/section-one/{id}', [RoomsSectionOneController::class, 'update']);
-Route::delete('/dana/rooms/section-one/{id}', [RoomsSectionOneController::class, 'destroy']);
+    //Rooms page section one CRUD
+    Route::post('/dana/rooms/section-one', [RoomsSectionOneController::class, 'store']);
+    Route::put('/dana/rooms/section-one/{id}', [RoomsSectionOneController::class, 'update']);
+    Route::delete('/dana/rooms/section-one/{id}', [RoomsSectionOneController::class, 'destroy']);
+    // ✅ ADDED: Upload room image for Rooms Section One
+    Route::post('/dana/rooms/section-one/upload-room-image', [RoomsSectionOneController::class, 'uploadRoomImage']);
 
-//Rooms page section two CRUD
-Route::post('/dana/rooms/section-two', [RoomsSectionTwoController::class, 'store']);
-Route::put('/dana/rooms/section-two/{id}', [RoomsSectionTwoController::class, 'update']);
-Route::delete('/dana/rooms/section-two/{id}', [RoomsSectionTwoController::class, 'destroy']);
-//Experiences page hero section CRUD
-Route::post('/dana/experiences/hero', [ExperiencesHeroController::class, 'store']);
-Route::put('/dana/experiences/hero/{id}', [ExperiencesHeroController::class, 'update']);
-Route::delete('/dana/experiences/hero/{id}', [ExperiencesHeroController::class, 'destroy']);
-//Experiences page section one CRUD
-Route::post('/dana/experiences/section-one', [ExperiencesSectionOneController::class, 'store']);
-Route::put('/dana/experiences/section-one/{id}', [ExperiencesSectionOneController::class, 'update']);
-Route::delete('/dana/experiences/section-one/{id}', [ExperiencesSectionOneController::class, 'destroy']);
-//Experiences page section two CRUD
-Route::post('/dana/experiences/section-two', [ExperiencesSectionTwoController::class, 'store']);
-Route::put('/dana/experiences/section-two/{id}', [ExperiencesSectionTwoController::class, 'update']);
-Route::delete('/dana/experiences/section-two/{id}', [ExperiencesSectionTwoController::class, 'destroy']);
-//Contact page hero section CRUD
-Route::post('/dana/contact/hero', [ContactHeroController::class, 'store']);
-Route::put('/dana/contact/hero/{id}', [ContactHeroController::class, 'update']);
-Route::delete('/dana/contact/hero/{id}', [ContactHeroController::class, 'destroy']);
+    //Rooms page section two CRUD
+    Route::post('/dana/rooms/section-two', [RoomsSectionTwoController::class, 'store']);
+    Route::put('/dana/rooms/section-two/{id}', [RoomsSectionTwoController::class, 'update']);
+    Route::delete('/dana/rooms/section-two/{id}', [RoomsSectionTwoController::class, 'destroy']);
+    
+    //Experiences page hero section CRUD
+    Route::post('/dana/experiences/hero', [ExperiencesHeroController::class, 'store']);
+    Route::put('/dana/experiences/hero/{id}', [ExperiencesHeroController::class, 'update']);
+    Route::delete('/dana/experiences/hero/{id}', [ExperiencesHeroController::class, 'destroy']);
+    
+    //Experiences page section one CRUD
+    Route::post('/dana/experiences/section-one', [ExperiencesSectionOneController::class, 'store']);
+    Route::put('/dana/experiences/section-one/{id}', [ExperiencesSectionOneController::class, 'update']);
+    Route::delete('/dana/experiences/section-one/{id}', [ExperiencesSectionOneController::class, 'destroy']);
+    // ✅ ADDED: Upload image for Experiences Section One
+    Route::post('/dana/experiences/section-one/upload-image', [ExperiencesSectionOneController::class, 'uploadImage']);
+    
+    //Experiences page section two CRUD
+    Route::post('/dana/experiences/section-two', [ExperiencesSectionTwoController::class, 'store']);
+    Route::put('/dana/experiences/section-two/{id}', [ExperiencesSectionTwoController::class, 'update']);
+    Route::delete('/dana/experiences/section-two/{id}', [ExperiencesSectionTwoController::class, 'destroy']);
+    
+    //Contact page hero section CRUD
+    Route::post('/dana/contact/hero', [ContactHeroController::class, 'store']);
+    Route::put('/dana/contact/hero/{id}', [ContactHeroController::class, 'update']);
+    Route::delete('/dana/contact/hero/{id}', [ContactHeroController::class, 'destroy']);
 
-//Contact page section one CRUD
-Route::post('/dana/contact/section-one', [ContactSectionOneController::class, 'store']);
-Route::put('/dana/contact/section-one/{id}', [ContactSectionOneController::class, 'update']);
-Route::delete('/dana/contact/section-one/{id}', [ContactSectionOneController::class, 'destroy']);
-//Contact page section two CRUD
-Route::post('/dana/contact/section-two', [ContactSectionTwoController::class, 'store']);
-Route::put('/dana/contact/section-two/{id}', [ContactSectionTwoController::class, 'update']);
-Route::delete('/dana/contact/section-two/{id}', [ContactSectionTwoController::class, 'destroy']);
+    //Contact page section one CRUD
+    Route::post('/dana/contact/section-one', [ContactSectionOneController::class, 'store']);
+    Route::put('/dana/contact/section-one/{id}', [ContactSectionOneController::class, 'update']);
+    Route::delete('/dana/contact/section-one/{id}', [ContactSectionOneController::class, 'destroy']);
+    //Contact page section two CRUD
+    Route::post('/dana/contact/section-two', [ContactSectionTwoController::class, 'store']);
+    Route::put('/dana/contact/section-two/{id}', [ContactSectionTwoController::class, 'update']);
+    Route::delete('/dana/contact/section-two/{id}', [ContactSectionTwoController::class, 'destroy']);
 
-//Contact page section three CRUD
-Route::post('/dana/contact/section-three', [ContactSectionThreeController::class, 'store']);
-Route::put('/dana/contact/section-three/{id}', [ContactSectionThreeController::class, 'update']);
-Route::delete('/dana/contact/section-three/{id}', [ContactSectionThreeController::class, 'destroy']);
-//Footer CRUD
-Route::post('/dana/footer', [FooterController::class, 'store']);
-Route::put('/dana/footer/{id}', [FooterController::class, 'update']);
-Route::delete('/dana/footer/{id}', [FooterController::class, 'destroy']);
-
-
-
+    //Contact page section three CRUD
+    Route::post('/dana/contact/section-three', [ContactSectionThreeController::class, 'store']);
+    Route::put('/dana/contact/section-three/{id}', [ContactSectionThreeController::class, 'update']);
+    Route::delete('/dana/contact/section-three/{id}', [ContactSectionThreeController::class, 'destroy']);
+    //Footer CRUD
+    Route::post('/dana/footer', [FooterController::class, 'store']);
+    Route::put('/dana/footer/{id}', [FooterController::class, 'update']);
+    Route::delete('/dana/footer/{id}', [FooterController::class, 'destroy']);
 });

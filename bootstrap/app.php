@@ -1,4 +1,4 @@
-Set-Content -Path bootstrap/app.php -Value @'<?php
+<?php
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;

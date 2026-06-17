@@ -5559,6 +5559,7 @@
                 },
                 "exclude-from-classmap": [
                     "/Tests/"
+                    
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",

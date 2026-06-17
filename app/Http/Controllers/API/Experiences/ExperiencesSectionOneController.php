@@ -10,18 +10,37 @@ use Illuminate\Support\Facades\Validator;
 
 class ExperiencesSectionOneController extends BaseController
 {
+    // Helper function to process experiences with image URLs
+    private function processExperiences($experiences)
+    {
+        if (empty($experiences)) {
+            return [];
+        }
+        
+        return array_map(function ($experience) {
+            if (isset($experience['image']) && $experience['image'] && !filter_var($experience['image'], FILTER_VALIDATE_URL)) {
+                $experience['image_url'] = Storage::url($experience['image']);
+            } else {
+                $experience['image_url'] = $experience['image'] ?? null;
+            }
+            return $experience;
+        }, $experiences);
+    }
+
     // GET /api/dana/experiences/section-one - Get all (Public)
     public function index()
     {
         $sections = ExperiencesSectionOne::orderBy('id', 'desc')->get();
         
         $data = $sections->map(function ($section) {
+            $processedExperiences = $this->processExperiences($section->experiences ?? []);
+            
             return [
                 'id' => $section->id,
                 'title' => $section->title,
                 'subtitle' => $section->subtitle,
                 'description' => $section->description,
-                'experiences' => $section->experiences,
+                'experiences' => $processedExperiences,
             ];
         });
 
@@ -37,12 +56,14 @@ class ExperiencesSectionOneController extends BaseController
             return $this->sendError('Experiences section not found', [], 404);
         }
 
+        $processedExperiences = $this->processExperiences($section->experiences ?? []);
+
         return $this->sendResponse([
             'id' => $section->id,
             'title' => $section->title,
             'subtitle' => $section->subtitle,
             'description' => $section->description,
-            'experiences' => $section->experiences,
+            'experiences' => $processedExperiences,
         ], 'Experiences section retrieved successfully');
     }
 
@@ -72,13 +93,62 @@ class ExperiencesSectionOneController extends BaseController
             'experiences' => $request->experiences,
         ]);
 
+        $processedExperiences = $this->processExperiences($section->experiences ?? []);
+
         return $this->sendResponse([
             'id' => $section->id,
             'title' => $section->title,
             'subtitle' => $section->subtitle,
             'description' => $section->description,
-            'experiences' => $section->experiences,
+            'experiences' => $processedExperiences,
         ], 'Experiences section created successfully', 201);
+    }
+
+    // POST /api/dana/experiences/section-one/upload-image - Upload experience image (Admin only)
+    public function uploadImage(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'experience_index' => 'required|integer',
+            'section_id' => 'required|integer|exists:experiences_section_one,id',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendValidationError($validator->errors());
+        }
+
+        $section = ExperiencesSectionOne::find($request->section_id);
+        $experiences = $section->experiences ?? [];
+        $experienceIndex = (int) $request->experience_index;
+
+        if (!isset($experiences[$experienceIndex])) {
+            return $this->sendError('Experience not found', [], 404);
+        }
+
+        // Delete old image if exists and is local file
+        if (isset($experiences[$experienceIndex]['image']) && $experiences[$experienceIndex]['image'] && !filter_var($experiences[$experienceIndex]['image'], FILTER_VALIDATE_URL)) {
+            Storage::disk('public')->delete($experiences[$experienceIndex]['image']);
+        }
+
+        // Store new image
+        $file = $request->file('image');
+        $path = $file->store('experiences-section-one', 'public');
+
+        // Update ONLY the specific experience's image
+        $experiences[$experienceIndex]['image'] = $path;
+        
+        // Save the entire experiences array back to the section
+        $section->experiences = $experiences;
+        $section->save();
+
+        // Get updated section and process experiences
+        $updatedSection = ExperiencesSectionOne::find($request->section_id);
+        $processedExperiences = $this->processExperiences($updatedSection->experiences ?? []);
+
+        return $this->sendResponse([
+            'experience_index' => $experienceIndex,
+            'experiences' => $processedExperiences,
+        ], 'Experience image uploaded successfully');
     }
 
     // PUT /api/dana/experiences/section-one/{id} - UPDATE (Admin only)
@@ -111,16 +181,29 @@ class ExperiencesSectionOneController extends BaseController
         if ($request->has('title')) $data['title'] = $request->title;
         if ($request->has('subtitle')) $data['subtitle'] = $request->subtitle;
         if ($request->has('description')) $data['description'] = $request->description;
-        if ($request->has('experiences')) $data['experiences'] = $request->experiences;
+        if ($request->has('experiences')) {
+            $existingExperiences = $section->experiences ?? [];
+            $newExperiences = $request->experiences;
+            
+            // Preserve existing image paths if not provided in update
+            foreach ($newExperiences as $key => $exp) {
+                if (!isset($exp['image']) && isset($existingExperiences[$key]['image'])) {
+                    $newExperiences[$key]['image'] = $existingExperiences[$key]['image'];
+                }
+            }
+            $data['experiences'] = $newExperiences;
+        }
 
         $section->update($data);
+
+        $processedExperiences = $this->processExperiences($section->experiences ?? []);
 
         return $this->sendResponse([
             'id' => $section->id,
             'title' => $section->title,
             'subtitle' => $section->subtitle,
             'description' => $section->description,
-            'experiences' => $section->experiences,
+            'experiences' => $processedExperiences,
         ], 'Experiences section updated successfully');
     }
 

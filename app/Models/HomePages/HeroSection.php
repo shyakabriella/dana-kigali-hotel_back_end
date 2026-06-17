@@ -23,9 +23,24 @@ class HeroSection extends Model
 
     public function getBackgroundImageUrlAttribute()
     {
-        if ($this->background_image) {
-            return Storage::url($this->background_image);
+        if (!$this->background_image) {
+            return null;
         }
-        return null;
+        
+        // If it's already a full URL, return as is
+        if (filter_var($this->background_image, FILTER_VALIDATE_URL)) {
+            return $this->background_image;
+        }
+        
+        // Get the full URL using app URL
+        $appUrl = config('app.url');
+        $url = Storage::url($this->background_image);
+        
+        // If Storage::url returns relative path, prepend app URL
+        if (str_starts_with($url, '/')) {
+            return rtrim($appUrl, '/') . $url;
+        }
+        
+        return $url;
     }
 }

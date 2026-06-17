@@ -20,7 +20,7 @@ class SectionTwoController extends BaseController
                 'id' => $section->id,
                 'title' => $section->title,
                 'subtitle' => $section->subtitle,
-                'rooms' => $section->rooms, // This uses the accessor
+                'rooms' => $section->rooms,
             ];
         });
 
@@ -52,10 +52,9 @@ class SectionTwoController extends BaseController
             'subtitle' => 'nullable|string|max:255',
             'rooms' => 'required|array|min:1',
             'rooms.*.name' => 'required|string',
-            'rooms.*.price' => 'required|string',
             'rooms.*.description' => 'required|string',
             'rooms.*.button_text' => 'required|string',
-            'rooms.*.image' => 'nullable|string', // Can be URL or will be set by file upload
+            'rooms.*.image' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -90,7 +89,7 @@ class SectionTwoController extends BaseController
         }
 
         $section = SectionTwo::find($request->section_id);
-        $rooms = json_decode($section->rooms, true) ?? [];
+        $rooms = $section->rooms ?? [];
         $roomIndex = $request->room_index;
 
         if (!isset($rooms[$roomIndex])) {
@@ -98,10 +97,7 @@ class SectionTwoController extends BaseController
         }
 
         // Delete old image if exists and is local file
-        if (isset($rooms[$roomIndex]['image_path']) && $rooms[$roomIndex]['image_path']) {
-            Storage::disk('public')->delete($rooms[$roomIndex]['image_path']);
-        }
-        if (isset($rooms[$roomIndex]['image']) && !filter_var($rooms[$roomIndex]['image'], FILTER_VALIDATE_URL)) {
+        if (isset($rooms[$roomIndex]['image']) && $rooms[$roomIndex]['image'] && !filter_var($rooms[$roomIndex]['image'], FILTER_VALIDATE_URL)) {
             Storage::disk('public')->delete($rooms[$roomIndex]['image']);
         }
 
@@ -137,7 +133,6 @@ class SectionTwoController extends BaseController
             'subtitle' => 'nullable|string|max:255',
             'rooms' => 'nullable|array',
             'rooms.*.name' => 'required_with:rooms|string',
-            'rooms.*.price' => 'required_with:rooms|string',
             'rooms.*.description' => 'required_with:rooms|string',
             'rooms.*.button_text' => 'required_with:rooms|string',
             'rooms.*.image' => 'nullable|string',
@@ -157,7 +152,7 @@ class SectionTwoController extends BaseController
         }
         
         if ($request->has('rooms')) {
-            $existingRooms = json_decode($section->rooms, true) ?? [];
+            $existingRooms = $section->rooms ?? [];
             $newRooms = $request->rooms;
             
             // Preserve existing image paths if not provided in update
@@ -171,7 +166,6 @@ class SectionTwoController extends BaseController
 
         $section->update($data);
 
-        // Get updated section with URLs
         $updatedSection = SectionTwo::find($id);
 
         return $this->sendResponse([
@@ -192,7 +186,7 @@ class SectionTwoController extends BaseController
         }
 
         // Delete all room images from storage
-        $rooms = json_decode($section->rooms, true) ?? [];
+        $rooms = $section->rooms ?? [];
         foreach ($rooms as $room) {
             if (isset($room['image']) && $room['image'] && !filter_var($room['image'], FILTER_VALIDATE_URL)) {
                 Storage::disk('public')->delete($room['image']);

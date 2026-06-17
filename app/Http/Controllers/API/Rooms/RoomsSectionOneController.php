@@ -10,155 +10,191 @@ use Illuminate\Support\Facades\Validator;
 
 class RoomsSectionOneController extends BaseController
 {
-    // GET /api/dana/rooms/section-one - Get all (Public)
+    // ─── Helpers ────────────────────────────────────────────────────────────
+
+    private function processRooms(array $rooms): array
+    {
+        return array_map(function ($room) {
+            $imagePath = $room['image'] ?? null;
+            $room['image_url'] = ($imagePath && !filter_var($imagePath, FILTER_VALIDATE_URL))
+                ? Storage::url($imagePath)
+                : $imagePath;
+            return $room;
+        }, $rooms);
+    }
+
+    // ─── GET /api/dana/rooms/section-one ────────────────────────────────────
+
     public function index()
     {
         $sections = RoomsSectionOne::orderBy('id', 'desc')->get();
-        
-        $data = $sections->map(function ($section) {
-            return [
-                'id' => $section->id,
-                'title' => $section->title,
-                'subtitle' => $section->subtitle,
-                'description' => $section->description,
-                'rooms' => $section->rooms,
-            ];
-        });
+
+        $data = $sections->map(fn($s) => [
+            'id'          => $s->id,
+            'title'       => $s->title,
+            'subtitle'    => $s->subtitle,
+            'description' => $s->description,
+            'rooms'       => $this->processRooms($s->rooms ?? []),
+        ]);
 
         return $this->sendResponse($data, 'Rooms section one retrieved successfully');
     }
 
-    // GET /api/dana/rooms/section-one/{id} - Get single (Public)
+    // ─── GET /api/dana/rooms/section-one/{id} ───────────────────────────────
+
     public function show($id)
     {
         $section = RoomsSectionOne::find($id);
-        
-        if (!$section) {
-            return $this->sendError('Rooms section not found', [], 404);
-        }
+        if (!$section) return $this->sendError('Not found', [], 404);
 
         return $this->sendResponse([
-            'id' => $section->id,
-            'title' => $section->title,
-            'subtitle' => $section->subtitle,
+            'id'          => $section->id,
+            'title'       => $section->title,
+            'subtitle'    => $section->subtitle,
             'description' => $section->description,
-            'rooms' => $section->rooms,
+            'rooms'       => $this->processRooms($section->rooms ?? []),
         ], 'Rooms section retrieved successfully');
     }
 
-    // POST /api/dana/rooms/section-one - CREATE (Admin only)
+    // ─── POST /api/dana/rooms/section-one ───────────────────────────────────
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'nullable|string|max:255',
-            'subtitle' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'rooms' => 'required|array|min:1',
-            'rooms.*.name' => 'required|string',
-            'rooms.*.category' => 'nullable|string',
-            'rooms.*.badge' => 'nullable|string',
-            'rooms.*.price' => 'required|string',
-            'rooms.*.size' => 'required|string',
-            'rooms.*.beds' => 'required|string',
-            'rooms.*.guests' => 'required|string',
-            'rooms.*.baths' => 'required|string',
-            'rooms.*.button_text' => 'nullable|string',
-            'rooms.*.main_image' => 'nullable|string',
-            'rooms.*.gallery' => 'nullable|array',
+            'title'                  => 'nullable|string|max:255',
+            'subtitle'               => 'nullable|string|max:255',
+            'description'            => 'nullable|string',
+            'rooms'                  => 'required|array|min:1',
+            'rooms.*.name'           => 'required|string',
+            'rooms.*.description'    => 'required|string',
+            'rooms.*.button_text'    => 'nullable|string',
         ]);
 
-        if ($validator->fails()) {
-            return $this->sendValidationError($validator->errors());
-        }
+        if ($validator->fails()) return $this->sendValidationError($validator->errors());
 
         $section = RoomsSectionOne::create([
-            'title' => $request->title ?? '— SIX WAYS TO STAY',
-            'subtitle' => $request->subtitle ?? 'Choose your ridge.',
-            'description' => $request->description ?? 'Each room at DANA KIGALI HOTEL is shaped around its view — from compact alpine retreats to suites with private terraces and stone fireplaces. All include daily housekeeping, hand-finished linens, and unhurried mornings.',
-            'rooms' => $request->rooms,
+            'title'       => $request->title ?? '— SIX WAYS TO STAY',
+            'subtitle'    => $request->subtitle ?? 'Choose your ridge.',
+            'description' => $request->description ?? '',
+            'rooms'       => $request->rooms,
         ]);
 
         return $this->sendResponse([
-            'id' => $section->id,
-            'title' => $section->title,
-            'subtitle' => $section->subtitle,
+            'id'          => $section->id,
+            'title'       => $section->title,
+            'subtitle'    => $section->subtitle,
             'description' => $section->description,
-            'rooms' => $section->rooms,
-        ], 'Rooms section created successfully', 201);
+            'rooms'       => $this->processRooms($section->rooms ?? []),
+        ], 'Created successfully', 201);
     }
 
-    // PUT /api/dana/rooms/section-one/{id} - UPDATE (Admin only)
+    // ─── PUT /api/dana/rooms/section-one/{id} ───────────────────────────────
+
     public function update(Request $request, $id)
     {
         $section = RoomsSectionOne::find($id);
-        
-        if (!$section) {
-            return $this->sendError('Rooms section not found', [], 404);
-        }
+        if (!$section) return $this->sendError('Not found', [], 404);
 
         $validator = Validator::make($request->all(), [
-            'title' => 'nullable|string|max:255',
-            'subtitle' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'rooms' => 'nullable|array',
-            'rooms.*.name' => 'required_with:rooms|string',
-            'rooms.*.price' => 'required_with:rooms|string',
-            'rooms.*.size' => 'required_with:rooms|string',
-            'rooms.*.beds' => 'required_with:rooms|string',
-            'rooms.*.guests' => 'required_with:rooms|string',
-            'rooms.*.baths' => 'required_with:rooms|string',
+            'title'                  => 'nullable|string|max:255',
+            'subtitle'               => 'nullable|string|max:255',
+            'description'            => 'nullable|string',
+            'rooms'                  => 'nullable|array',
+            'rooms.*.name'           => 'required_with:rooms|string',
+            'rooms.*.description'    => 'required_with:rooms|string',
+            'rooms.*.button_text'    => 'nullable|string',
+            'rooms.*.image'          => 'nullable|string',
         ]);
 
-        if ($validator->fails()) {
-            return $this->sendValidationError($validator->errors());
-        }
+        if ($validator->fails()) return $this->sendValidationError($validator->errors());
 
         $data = [];
-        
-        if ($request->has('title')) $data['title'] = $request->title;
-        if ($request->has('subtitle')) $data['subtitle'] = $request->subtitle;
+        if ($request->has('title'))       $data['title']       = $request->title;
+        if ($request->has('subtitle'))    $data['subtitle']    = $request->subtitle;
         if ($request->has('description')) $data['description'] = $request->description;
-        if ($request->has('rooms')) $data['rooms'] = $request->rooms;
+
+        if ($request->has('rooms')) {
+            $existingRooms  = $section->rooms ?? [];
+            $incomingRooms  = $request->rooms;
+
+            // ✅ Merge: keep existing image if incoming doesn't send a new path
+            $data['rooms'] = array_map(function ($incoming, $index) use ($existingRooms) {
+                $existing = $existingRooms[$index] ?? [];
+                return [
+                    'name'        => $incoming['name']        ?? ($existing['name'] ?? ''),
+                    'description' => $incoming['description'] ?? ($existing['description'] ?? ''),
+                    'button_text' => $incoming['button_text'] ?? ($existing['button_text'] ?? 'Book Now'),
+                    'image'       => $incoming['image']       ?? ($existing['image'] ?? null), // ✅ never wipe
+                ];
+            }, $incomingRooms, array_keys($incomingRooms));
+        }
 
         $section->update($data);
 
         return $this->sendResponse([
-            'id' => $section->id,
-            'title' => $section->title,
-            'subtitle' => $section->subtitle,
+            'id'          => $section->id,
+            'title'       => $section->title,
+            'subtitle'    => $section->subtitle,
             'description' => $section->description,
-            'rooms' => $section->rooms,
-        ], 'Rooms section updated successfully');
+            'rooms'       => $this->processRooms($section->rooms ?? []),
+        ], 'Updated successfully');
     }
 
-    // DELETE /api/dana/rooms/section-one/{id} - DELETE (Admin only)
+    // ─── POST /api/dana/rooms/section-one/upload-room-image ─────────────────
+
+    public function uploadRoomImage(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'image'      => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'room_index' => 'required|integer|min:0',
+            'section_id' => 'required|integer|exists:rooms_section_one,id',
+        ]);
+
+        if ($validator->fails()) return $this->sendValidationError($validator->errors());
+
+        $section   = RoomsSectionOne::find($request->section_id);
+        $rooms     = $section->rooms ?? [];
+        $roomIndex = (int) $request->room_index;
+
+        if (!isset($rooms[$roomIndex])) return $this->sendError('Room index not found', [], 404);
+
+        // Delete old image if it's a local file
+        $oldImage = $rooms[$roomIndex]['image'] ?? null;
+        if ($oldImage && !filter_var($oldImage, FILTER_VALIDATE_URL)) {
+            Storage::disk('public')->delete($oldImage);
+        }
+
+        // Store new image
+        $path = $request->file('image')->store('rooms-section-one', 'public');
+
+        // ✅ Update only the target room's image
+        $rooms[$roomIndex]['image'] = $path;
+        $section->rooms = $rooms;
+        $section->save();
+
+        $fresh = RoomsSectionOne::find($request->section_id);
+
+        return $this->sendResponse([
+            'room_index' => $roomIndex,
+            'rooms'      => $this->processRooms($fresh->rooms ?? []),
+        ], 'Image uploaded successfully');
+    }
+
+    // ─── DELETE /api/dana/rooms/section-one/{id} ────────────────────────────
+
     public function destroy($id)
     {
         $section = RoomsSectionOne::find($id);
-        
-        if (!$section) {
-            return $this->sendError('Rooms section not found', [], 404);
-        }
-        
-        // Delete all images from storage
-        $rooms = $section->rooms;
-        if (is_array($rooms)) {
-            foreach ($rooms as $room) {
-                if (isset($room['main_image']) && $room['main_image'] && !filter_var($room['main_image'], FILTER_VALIDATE_URL)) {
-                    Storage::disk('public')->delete($room['main_image']);
-                }
-                if (isset($room['gallery']) && is_array($room['gallery'])) {
-                    foreach ($room['gallery'] as $image) {
-                        if ($image && !filter_var($image, FILTER_VALIDATE_URL)) {
-                            Storage::disk('public')->delete($image);
-                        }
-                    }
-                }
+        if (!$section) return $this->sendError('Not found', [], 404);
+
+        foreach ($section->rooms ?? [] as $room) {
+            $img = $room['image'] ?? null;
+            if ($img && !filter_var($img, FILTER_VALIDATE_URL)) {
+                Storage::disk('public')->delete($img);
             }
         }
-        
-        $section->delete();
 
-        return $this->sendResponse([], 'Rooms section deleted successfully');
+        $section->delete();
+        return $this->sendResponse([], 'Deleted successfully');
     }
 }
