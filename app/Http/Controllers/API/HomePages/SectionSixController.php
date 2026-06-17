@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Validator;
 
 class SectionSixController extends BaseController
 {
-    // GET /api/dana/section-six - Get all sections (Public)
     public function index()
     {
         $sections = SectionSix::orderBy('id', 'desc')->get();
@@ -27,7 +26,6 @@ class SectionSixController extends BaseController
         return $this->sendResponse($data, 'Sections retrieved successfully');
     }
 
-    // GET /api/dana/section-six/{id} - Get single section (Public)
     public function show($id)
     {
         $section = SectionSix::find($id);
@@ -44,7 +42,6 @@ class SectionSixController extends BaseController
         ], 'Section retrieved successfully');
     }
 
-    // POST /api/dana/section-six - CREATE (Admin only)
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -71,7 +68,6 @@ class SectionSixController extends BaseController
         ], 'Section created successfully', 201);
     }
 
-    // POST /api/dana/section-six/upload-images - Upload multiple images (Admin only)
     public function uploadImages(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -93,13 +89,8 @@ class SectionSixController extends BaseController
             $uploadedImages[] = $path;
         }
 
-        // Merge existing with new images
         $allImages = array_merge($existingGallery, $uploadedImages);
-        
-        // Update gallery with paths (not URLs)
         $section->update(['gallery' => $allImages]);
-
-        // Get updated section with URLs
         $updatedSection = SectionSix::find($request->section_id);
 
         return $this->sendResponse([
@@ -109,7 +100,6 @@ class SectionSixController extends BaseController
         ], 'Images uploaded successfully');
     }
 
-    // POST /api/dana/section-six/add-image - Add single image (Admin only)
     public function addImage(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -124,15 +114,10 @@ class SectionSixController extends BaseController
         $section = SectionSix::find($request->section_id);
         $existingGallery = $section->gallery_paths;
         
-        // Store new image
-        $file = $request->file('image');
-        $path = $file->store('section-six/gallery', 'public');
-        
-        // Add to gallery
+        $path = $request->file('image')->store('section-six/gallery', 'public');
         $existingGallery[] = $path;
         $section->update(['gallery' => $existingGallery]);
 
-        // Get updated section with URLs
         $updatedSection = SectionSix::find($request->section_id);
 
         return $this->sendResponse([
@@ -142,7 +127,46 @@ class SectionSixController extends BaseController
         ], 'Image added successfully');
     }
 
-    // PUT /api/dana/section-six/{id} - UPDATE (Admin only)
+    // ✅ NEW: Replace image at specific index
+    public function replaceImage(Request $request, $id, $index)
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendValidationError($validator->errors());
+        }
+
+        $section = SectionSix::find($id);
+
+        if (!$section) {
+            return $this->sendError('Section not found', [], 404);
+        }
+
+        $galleryPaths = $section->gallery_paths;
+        $index = (int) $index;
+
+        // Delete the old image file if it exists at that index
+        if (isset($galleryPaths[$index])) {
+            Storage::disk('public')->delete($galleryPaths[$index]);
+        }
+
+        // Store the new image at the same index
+        $newPath = $request->file('image')->store('section-six/gallery', 'public');
+        $galleryPaths[$index] = $newPath;
+
+        $section->update(['gallery' => $galleryPaths]);
+
+        $updatedSection = SectionSix::find($id);
+
+        return $this->sendResponse([
+            'replaced_image' => Storage::url($newPath),
+            'index' => $index,
+            'gallery' => $updatedSection->gallery,
+        ], 'Image replaced successfully');
+    }
+
     public function update(Request $request, $id)
     {
         $section = SectionSix::find($id);
@@ -164,15 +188,9 @@ class SectionSixController extends BaseController
 
         $data = [];
         
-        if ($request->has('title')) {
-            $data['title'] = $request->title;
-        }
-        if ($request->has('subtitle')) {
-            $data['subtitle'] = $request->subtitle;
-        }
-        if ($request->has('gallery')) {
-            $data['gallery'] = $request->gallery;
-        }
+        if ($request->has('title')) $data['title'] = $request->title;
+        if ($request->has('subtitle')) $data['subtitle'] = $request->subtitle;
+        if ($request->has('gallery')) $data['gallery'] = $request->gallery;
 
         $section->update($data);
 
@@ -184,7 +202,6 @@ class SectionSixController extends BaseController
         ], 'Section updated successfully');
     }
 
-    // DELETE /api/dana/section-six/{id}/image/{index} - Delete specific image (Admin only)
     public function deleteImage($id, $index)
     {
         $section = SectionSix::find($id);
@@ -199,19 +216,13 @@ class SectionSixController extends BaseController
             return $this->sendError('Image not found', [], 404);
         }
 
-        // Delete file from storage
         Storage::disk('public')->delete($galleryPaths[$index]);
-        
-        // Remove from array
         array_splice($galleryPaths, $index, 1);
-        
-        // Update gallery
         $section->update(['gallery' => $galleryPaths]);
 
         return $this->sendResponse([], 'Image deleted successfully');
     }
 
-    // DELETE /api/dana/section-six/{id}/images - Delete all images (Admin only)
     public function deleteAllImages($id)
     {
         $section = SectionSix::find($id);
@@ -220,20 +231,15 @@ class SectionSixController extends BaseController
             return $this->sendError('Section not found', [], 404);
         }
 
-        $galleryPaths = $section->gallery_paths;
-        
-        // Delete all files from storage
-        foreach ($galleryPaths as $image) {
+        foreach ($section->gallery_paths as $image) {
             Storage::disk('public')->delete($image);
         }
         
-        // Clear gallery
         $section->update(['gallery' => []]);
 
         return $this->sendResponse([], 'All images deleted successfully');
     }
 
-    // DELETE /api/dana/section-six/{id} - DELETE section (Admin only)
     public function destroy($id)
     {
         $section = SectionSix::find($id);
@@ -242,9 +248,7 @@ class SectionSixController extends BaseController
             return $this->sendError('Section not found', [], 404);
         }
 
-        // Delete all images from storage
-        $galleryPaths = $section->gallery_paths;
-        foreach ($galleryPaths as $image) {
+        foreach ($section->gallery_paths as $image) {
             Storage::disk('public')->delete($image);
         }
         

@@ -167,13 +167,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/dana/section-five/{id}/image', [SectionFiveController::class, 'deleteImage']);
     
     // Section Six CRUD
-    Route::post('/dana/section-six', [SectionSixController::class, 'store']);
-    Route::put('/dana/section-six/{id}', [SectionSixController::class, 'update']);
-    Route::delete('/dana/section-six/{id}', [SectionSixController::class, 'destroy']);
-    Route::post('/dana/section-six/upload-images', [SectionSixController::class, 'uploadImages']);
-    Route::post('/dana/section-six/add-image', [SectionSixController::class, 'addImage']);
-    Route::delete('/dana/section-six/{id}/image/{index}', [SectionSixController::class, 'deleteImage']);
-    Route::delete('/dana/section-six/{id}/images', [SectionSixController::class, 'deleteAllImages']);
+// Section Six CRUD
+Route::post('/dana/section-six', [SectionSixController::class, 'store']);
+Route::put('/dana/section-six/{id}', [SectionSixController::class, 'update']);
+Route::delete('/dana/section-six/{id}', [SectionSixController::class, 'destroy']);
+Route::post('/dana/section-six/upload-images', [SectionSixController::class, 'uploadImages']);
+Route::post('/dana/section-six/add-image', [SectionSixController::class, 'addImage']);
+Route::delete('/dana/section-six/{id}/image/{index}', [SectionSixController::class, 'deleteImage']);
+Route::delete('/dana/section-six/{id}/images', [SectionSixController::class, 'deleteAllImages']);
+Route::put('/dana/section-six/{id}/image/{index}', [SectionSixController::class, 'replaceImage']); // ✅ NEW
     
     // Section Seven CRUD
     Route::post('/dana/section-seven', [SectionSevenController::class, 'store']);
